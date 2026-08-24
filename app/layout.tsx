@@ -17,7 +17,7 @@ const oswald = Oswald({
 })
 
 export const metadata: Metadata = {
-  title: 'Kohistan Enclave 360 Cricket Arena | Book. Play. Win.',
+  title: 'Kohistan Enclave Cricket Arena | Book. Play. Win.',
   description:
     'Premium enclosed 360° cricket arena by Kohistan Enclave. Floodlit night matches, real-time ground booking, memberships, and corporate event packages.',
   generator: 'v0.app',
