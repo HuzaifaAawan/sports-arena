@@ -11,8 +11,20 @@ import {
   Moon,
   Loader2,
   PartyPopper,
+  LogIn,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSession, signIn } from 'next-auth/react'
+import {
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  runTransaction,
+  serverTimestamp,
+  where,
+} from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import { Reveal } from './motion-primitives'
 
 type Slot = { time: string; label: string; price: number; night: boolean }
@@ -30,11 +42,6 @@ const SLOTS: Slot[] = [
   { time: '22:00', label: '10:00 PM', price: 4500, night: true },
 ]
 
-// Deterministic pseudo-availability so it feels real without a backend.
-function isBooked(dayIndex: number, slotIndex: number) {
-  return (dayIndex * 7 + slotIndex * 3) % 5 === 0
-}
-
 function buildMonth(base: Date) {
   const year = base.getFullYear()
   const month = base.getMonth()
@@ -48,6 +55,7 @@ function buildMonth(base: Date) {
 }
 
 export function Booking() {
+  const { data: session } = useSession()
   const today = useMemo(() => new Date(), [])
   const [viewDate, setViewDate] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1),
@@ -56,6 +64,8 @@ export function Booking() {
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
   const [duration, setDuration] = useState(1)
   const [status, setStatus] = useState<'idle' | 'confirming' | 'done'>('idle')
+  const [bookedTimes, setBookedTimes] = useState<Set<string>>(new Set())
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const { cells, year, month } = useMemo(
     () => buildMonth(viewDate),
@@ -65,6 +75,33 @@ export function Booking() {
     month: 'long',
     year: 'numeric',
   })
+
+  const dateKey =
+    selectedDay !== null ? `${year}-${month + 1}-${selectedDay}` : null
+
+  // Live-subscribe to bookings for the selected date, so availability
+  // updates instantly for everyone (no refresh needed).
+  useEffect(() => {
+    if (!dateKey) {
+      setBookedTimes(new Set())
+      return
+    }
+    const q = query(collection(db, 'bookings'), where('dateKey', '==', dateKey))
+    const unsubscribe = onSnapshot(
+      q,
+      (snap) => {
+        const times = new Set<string>()
+        snap.forEach((d) => times.add(d.data().slotTime as string))
+        setBookedTimes(times)
+      },
+      () => {
+        // If Firestore rules/config aren't ready yet, fail open rather than
+        // blocking the whole calendar.
+        setBookedTimes(new Set())
+      },
+    )
+    return () => unsubscribe()
+  }, [dateKey])
 
   const canGoPrev =
     viewDate.getFullYear() > today.getFullYear() ||
@@ -82,14 +119,51 @@ export function Booking() {
     setSelectedDay(day)
     setSelectedSlot(null)
     setStatus('idle')
+    setErrorMsg(null)
   }
 
   const total = selectedSlot ? selectedSlot.price * duration : 0
 
-  function confirm() {
-    if (!selectedSlot) return
+  async function confirm() {
+    if (!selectedSlot || !dateKey) return
+    if (!session?.user) {
+      signIn('google')
+      return
+    }
+
     setStatus('confirming')
-    setTimeout(() => setStatus('done'), 1600)
+    setErrorMsg(null)
+
+    const bookingId = `${dateKey}_${selectedSlot.time}`
+    const bookingRef = doc(db, 'bookings', bookingId)
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const existing = await transaction.get(bookingRef)
+        if (existing.exists()) {
+          throw new Error('ALREADY_BOOKED')
+        }
+        transaction.set(bookingRef, {
+          dateKey,
+          slotTime: selectedSlot.time,
+          slotLabel: selectedSlot.label,
+          duration,
+          price: selectedSlot.price,
+          total,
+          userName: session.user?.name ?? null,
+          userEmail: session.user?.email ?? null,
+          createdAt: serverTimestamp(),
+        })
+      })
+      setStatus('done')
+    } catch (err) {
+      if (err instanceof Error && err.message === 'ALREADY_BOOKED') {
+        setErrorMsg('Ye slot abhi kisi aur ne book kar liya hai. Doosra slot select karein.')
+      } else {
+        setErrorMsg('Booking mein masla aaya. Dobara try karein.')
+      }
+      setStatus('idle')
+    }
   }
 
   function reset() {
@@ -97,6 +171,7 @@ export function Booking() {
     setSelectedSlot(null)
     setDuration(1)
     setStatus('idle')
+    setErrorMsg(null)
   }
 
   return (
@@ -208,8 +283,8 @@ export function Booking() {
               ) : (
                 <>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {SLOTS.map((slot, si) => {
-                      const booked = isBooked(selectedDay, si)
+                    {SLOTS.map((slot) => {
+                      const booked = bookedTimes.has(slot.time)
                       const active = selectedSlot?.time === slot.time
                       return (
                         <button
@@ -218,6 +293,7 @@ export function Booking() {
                           onClick={() => {
                             setSelectedSlot(slot)
                             setStatus('idle')
+                            setErrorMsg(null)
                           }}
                           className={`flex flex-col items-start gap-1 rounded-xl border p-2.5 text-left transition-all ${
                             active
@@ -264,6 +340,10 @@ export function Booking() {
                     </div>
                   </div>
 
+                  {errorMsg ? (
+                    <p className="mt-3 text-sm text-red-400">{errorMsg}</p>
+                  ) : null}
+
                   <div className="mt-auto pt-5">
                     <div className="mb-3 flex items-center justify-between border-t border-white/10 pt-3">
                       <span className="text-sm text-muted-foreground">Total</span>
@@ -280,6 +360,11 @@ export function Booking() {
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Confirming...
+                        </>
+                      ) : !session?.user ? (
+                        <>
+                          <LogIn className="h-4 w-4" />
+                          Sign in to Book
                         </>
                       ) : (
                         <>
