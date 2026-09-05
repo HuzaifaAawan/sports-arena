@@ -12,6 +12,7 @@ import {
   Loader2,
   PartyPopper,
   LogIn,
+  AlertCircle,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useSession, signIn } from 'next-auth/react'
@@ -158,9 +159,14 @@ export function Booking() {
       setStatus('done')
     } catch (err) {
       if (err instanceof Error && err.message === 'ALREADY_BOOKED') {
-        setErrorMsg('Ye slot abhi kisi aur ne book kar liya hai. Doosra slot select karein.')
+        // Someone else grabbed this exact slot a moment before us. Block it
+        // in the UI immediately (don't wait for the live listener to catch
+        // up) so the user can't retry the same slot.
+        setBookedTimes((prev) => new Set(prev).add(selectedSlot.time))
+        setSelectedSlot(null)
+        setErrorMsg('This slot was just booked by someone else. Please choose another slot.')
       } else {
-        setErrorMsg('Booking mein masla aaya. Dobara try karein.')
+        setErrorMsg('Something went wrong with your booking. Please try again.')
       }
       setStatus('idle')
     }
@@ -340,9 +346,20 @@ export function Booking() {
                     </div>
                   </div>
 
-                  {errorMsg ? (
-                    <p className="mt-3 text-sm text-red-400">{errorMsg}</p>
-                  ) : null}
+                  <AnimatePresence>
+                    {errorMsg ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        role="alert"
+                        className="mt-3 flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2.5 text-sm text-red-300"
+                      >
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+                        <span>{errorMsg}</span>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
 
                   <div className="mt-auto pt-5">
                     <div className="mb-3 flex items-center justify-between border-t border-white/10 pt-3">

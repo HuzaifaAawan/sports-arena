@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Login isn't Firebase Auth here — it's Google OAuth via NextAuth
+    // (Auth.js), handled entirely on the server. The server reads/writes
+    // this collection through the Firebase Admin SDK (lib/firebase-admin.ts),
+    // which bypasses these rules completely. So the correct, simplest rule
+    // is to deny ALL direct client access: nothing in the browser should
+    // ever be able to touch a user's profile or role, whether it's their
+    // own doc or someone else's.
+    match /users/{userId} {
+      allow read, write: if false;
+    }
+
+    // Booking slots (components/booking.tsx). This is still the
+    // "front-end demo" phase (no Stripe / payment confirmation wired in
+    // yet), so booking creation happens straight from the browser via the
+    // Firestore client SDK — there's no Firebase Auth session to check
+    // here either. Reads are public (the calendar/availability grid is
+    // public info anyway). Writes are allowed only to CREATE a new slot
+    // doc with the expected shape — never to update or delete one, so an
+    // existing booking can't be tampered with or wiped from the client.
+    // TODO: once Stripe is wired in, move booking creation server-side
+    // (only after a successful payment) and lock this down to read-only.
+    match /bookings/{bookingId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(
+                        ['dateKey', 'slotTime', 'slotLabel', 'duration', 'price', 'total']
+                      )
+                    && request.resource.data.dateKey is string
+                    && request.resource.data.slotTime is string
+                    && request.resource.data.duration is number
+                    && request.resource.data.price is number
+                    && request.resource.data.total is number;
+      allow update, delete: if false;
+    }
+  }
+}

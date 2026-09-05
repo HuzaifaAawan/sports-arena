@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useScroll, useMotionValueEvent } from 'motion/
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
+import Link from 'next/link'
 
 const links = [
   { label: 'About', href: '#about' },
@@ -35,6 +36,25 @@ function GoogleIcon() {
         d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.6 5.4C41.8 36 44 30.6 44 24c0-1.2-.1-2.4-.4-3.5z"
       />
     </svg>
+  )
+}
+
+function DashboardLink({ variant = 'desktop' }: { variant?: 'desktop' | 'mobile' }) {
+  const { data: session } = useSession()
+
+  if (session?.user?.role !== 'staff') return null
+
+  return (
+    <Link
+      href="/staff-dashboard"
+      className={
+        variant === 'desktop'
+          ? 'hidden items-center gap-1.5 rounded-full glass px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/10 sm:flex'
+          : 'rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground'
+      }
+    >
+      Dashboard
+    </Link>
   )
 }
 
@@ -140,6 +160,7 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <DashboardLink variant="desktop" />
           <div className="hidden sm:block">
             <AuthButton variant="desktop" />
           </div>
@@ -178,6 +199,7 @@ export function Navbar() {
               </a>
             ))}
             <div className="mt-1 border-t border-white/10 pt-2">
+              <DashboardLink variant="mobile" />
               <AuthButton variant="mobile" />
             </div>
             <a
