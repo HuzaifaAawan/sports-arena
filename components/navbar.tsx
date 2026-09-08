@@ -139,7 +139,7 @@ export function Navbar() {
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Star className="h-5 w-5 fill-current" />
           </span>
-          <span className="hidden font-display text-lg font-semibold leading-none tracking-wide sm:block">
+          <span className="hidden rounded-lg bg-foreground/95 px-2.5 py-1 font-display text-lg font-semibold leading-none tracking-wide text-background sm:block">
             CHAMPIONS
             <span className="block text-[11px] font-normal tracking-[0.3em] text-primary">
               YARD

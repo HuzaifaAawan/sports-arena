@@ -48,7 +48,7 @@ export function Hero() {
 
       <motion.div
         style={{ y: contentY, opacity: contentOpacity }}
-        className="mx-auto max-w-5xl px-4 pt-24 text-center sm:px-6"
+        className="mx-auto max-w-5xl px-4 pt-20 text-center sm:px-6"
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -76,8 +76,8 @@ export function Hero() {
           transition={{ delay: 0.35, duration: 0.7 }}
           className="text-balance font-display text-5xl font-bold uppercase leading-[0.95] tracking-tight sm:text-7xl md:text-8xl"
         >
-          Play under the
-          <span className="block text-primary text-glow">floodlights</span>
+          PREMIUM SPORTS
+          <span className="block text-primary text-glow">ARENA</span>
         </motion.h1>
 
         <motion.p
@@ -93,7 +93,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55, duration: 0.7 }}
-          className="mx-auto mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg"
+          className="mx-auto mt-6 max-w-xl rounded-2xl glass px-5 py-4 text-pretty text-base leading-relaxed text-muted-foreground sm:px-6 sm:py-5 sm:text-lg"
         >
           Champions Yard is a premium multi-sport arena for padel, soccer,
           and cricket. Book your court, grab a membership, and play your
@@ -104,7 +104,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.65, duration: 0.7 }}
-          className="mt-9 flex flex-wrap items-center justify-center gap-4"
+          className="mt-7 flex flex-wrap items-center justify-center gap-4"
         >
           <a
             href="#booking"
@@ -126,10 +126,10 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9, duration: 0.8 }}
-          className="mx-auto mt-14 grid max-w-2xl grid-cols-3 gap-4"
+          className="mx-auto mt-8 grid max-w-2xl grid-cols-3 gap-3 sm:mt-9 sm:gap-4"
         >
           {stats.map((s) => (
-            <div key={s.label} className="rounded-2xl glass px-3 py-5">
+            <div key={s.label} className="rounded-2xl glass px-3 py-3.5 sm:py-4">
               <div className="font-display text-2xl font-bold text-primary sm:text-4xl">
                 <Counter to={s.to} suffix={s.suffix} />
               </div>
