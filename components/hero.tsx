@@ -93,7 +93,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 42 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55, duration: 0.7 }}
-          className="mx-auto mt-4 max-w-xl rounded-2xl glass px-4 py-3 text-pretty text-sm font-medium leading-relaxed bg-gradient-to-r from-[#3e8fd0] via-[#c99a3d] to-[#daa017] bg-clip-text text-transparent sm:px-5 sm:py-3.5 sm:text-base"
+          className="mx-auto mt-4 max-w-xl rounded-2xl bg-foreground/95 px-4 py-3 text-pretty text-sm font-medium leading-relaxed text-black backdrop-blur-md sm:px-5 sm:py-3.5 sm:text-base"
         >
           Champions Yard is a premium multi-sport arena for padel, soccer,
           and cricket. Book your court, grab a membership, and play your
