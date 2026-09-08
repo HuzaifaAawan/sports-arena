@@ -1,12 +1,13 @@
 'use client'
 
-import { Share2, Globe, Send, ArrowUpRight } from 'lucide-react'
+import { Share2, Globe, Send, ArrowUpRight, Star } from 'lucide-react'
 
 const nav = [
   { label: 'About', href: '#about' },
   { label: 'Facility', href: '#facility' },
   { label: 'Booking', href: '#booking' },
   { label: 'Packages', href: '#packages' },
+  { label: 'Merchandise', href: '#merchandise' },
   { label: 'Gallery', href: '#gallery' },
   { label: 'Events', href: '#events' },
 ]
@@ -26,19 +27,19 @@ export function Footer() {
         <div className="grid gap-10 pb-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2.5">
-              <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary font-display text-lg font-bold text-primary-foreground">
-                360
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
+                <Star className="h-5 w-5 fill-current" />
               </span>
               <span className="font-display text-lg font-semibold leading-none tracking-wide">
-                KOHISTAN ENCLAVE
+                CHAMPIONS
                 <span className="block text-[11px] font-normal tracking-[0.3em] text-primary">
-                  CRICKET ARENA
+                  YARD
                 </span>
               </span>
             </div>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              The community's premium enclosed 360° cricket arena. Book, play,
-              and win under the floodlights.
+              Premium padel, soccer, and cricket courts under one roof. Play,
+              compete, and become champions — day or night.
             </p>
             <div className="mt-5 flex gap-3">
               {socials.map((s) => (
@@ -108,8 +109,8 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col items-center justify-between gap-3 border-t border-white/10 py-6 text-sm text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} Kohistan Enclave 360 Cricket Arena. All rights reserved.</p>
-          <p>Built for the community.</p>
+          <p>© {new Date().getFullYear()} Champions Yard. All rights reserved.</p>
+          <p>Play. Compete. Become Champions.</p>
         </div>
       </div>
     </footer>

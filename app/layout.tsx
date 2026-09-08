@@ -18,15 +18,15 @@ const oswald = Oswald({
 })
 
 export const metadata: Metadata = {
-  title: 'Kohistan Enclave Cricket Arena | Book. Play. Win.',
+  title: 'Champions Yard | Play. Compete. Become Champions.',
   description:
-    'Premium enclosed 360° cricket arena by Kohistan Enclave. Floodlit night matches, real-time ground booking, memberships, and corporate event packages.',
+    'Champions Yard — a premium multi-sport arena for padel, soccer, and cricket. Floodlit night sessions, real-time court booking, memberships, and corporate event packages.',
   generator: 'v0.app',
 }
 
 export const viewport: Viewport = {
   colorScheme: 'dark',
-  themeColor: '#0a0a0b',
+  themeColor: '#0D1B2D',
   width: 'device-width',
   initialScale: 1,
 }

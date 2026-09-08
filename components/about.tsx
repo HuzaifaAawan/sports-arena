@@ -17,7 +17,7 @@ export function About() {
           <div className="relative overflow-hidden rounded-3xl border border-white/10">
             <img
               src="/images/gallery-6.png"
-              alt="Aerial view of the illuminated arena within Kohistan Enclave"
+              alt="Aerial view of the illuminated Champions Yard arena"
               className="aspect-[4/3] w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/70 to-transparent" />
@@ -36,23 +36,23 @@ export function About() {
           </Reveal>
           <Reveal delay={0.05}>
             <h2 className="text-balance font-display text-4xl font-bold uppercase leading-tight sm:text-5xl">
-              A home ground built by Kohistan Enclave
+              The home ground built for Champions
             </h2>
           </Reveal>
           <Reveal delay={0.1}>
             <p className="mt-6 text-pretty leading-relaxed text-muted-foreground">
-              Kohistan Enclave 360 Cricket Arena was born from a simple idea —
-              give the community a world-class place to play. What started as a
-              society project is now a fully enclosed, floodlit arena engineered
-              for serious cricket and unforgettable evenings.
+              Champions Yard was born from a simple idea — give the community
+              a world-class place to play. What started as one court is now a
+              fully enclosed, floodlit multi-sport arena engineered for
+              serious padel, soccer, and cricket, and unforgettable evenings.
             </p>
           </Reveal>
           <Reveal delay={0.15}>
             <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
-              From weekend tape-ball tournaments to corporate leagues and
-              professional practice, the arena is designed to host it all with
-              premium turf, 360° netting, and stadium lighting that turns night
-              into day.
+              From weekend padel matches to corporate soccer leagues and
+              tape-ball tournaments, the arena is designed to host it all with
+              premium surfaces, 360° enclosed courts, and stadium lighting
+              that turns night into day.
             </p>
           </Reveal>
 

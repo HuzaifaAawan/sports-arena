@@ -1,4 +1,4 @@
-# Kohistan Enclave — Cricket Arena
+# Champions Yard — Multi-Sport Arena
 
 Live: https://kohistan-sports-arena.vercel.app
 

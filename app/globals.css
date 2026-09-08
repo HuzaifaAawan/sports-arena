@@ -39,34 +39,36 @@
   color-scheme: dark;
   --radius: 0.75rem;
 
-  /* Charcoal / near-black base */
-  --background: oklch(0.16 0.006 260);
-  --foreground: oklch(0.97 0.005 250);
+  /* Champions Yard brand palette
+     Navy #0D1B2D · Gold #DAA017 · White #FFFFFF
+     Light Gray #F2F2F2 · Dark Gray #1A1A1A */
+  --background: #0d1b2d;
+  --foreground: #f2f2f2;
 
-  /* Glass card surfaces */
-  --card: oklch(0.205 0.008 260);
-  --card-foreground: oklch(0.97 0.005 250);
-  --popover: oklch(0.2 0.008 260);
-  --popover-foreground: oklch(0.97 0.005 250);
+  /* Glass card surfaces — lighter navy tints */
+  --card: #14243a;
+  --card-foreground: #f2f2f2;
+  --popover: #17293f;
+  --popover-foreground: #f2f2f2;
 
-  /* Floodlight yellow accent */
-  --primary: oklch(0.86 0.18 96);
-  --primary-foreground: oklch(0.19 0.02 90);
+  /* Champions gold accent */
+  --primary: #daa017;
+  --primary-foreground: #1a1a1a;
 
-  --secondary: oklch(0.26 0.01 260);
-  --secondary-foreground: oklch(0.97 0.005 250);
+  --secondary: #1c2c42;
+  --secondary-foreground: #f2f2f2;
 
-  --muted: oklch(0.26 0.01 260);
-  --muted-foreground: oklch(0.7 0.015 260);
+  --muted: #1c2c42;
+  --muted-foreground: #9ba9bc;
 
-  --accent: oklch(0.86 0.18 96);
-  --accent-foreground: oklch(0.19 0.02 90);
+  --accent: #daa017;
+  --accent-foreground: #1a1a1a;
 
-  --destructive: oklch(0.62 0.21 25);
+  --destructive: #e5484d;
 
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.86 0.18 96);
+  --border: rgb(242 242 242 / 10%);
+  --input: rgb(242 242 242 / 14%);
+  --ring: #daa017;
 }
 
 @layer base {
@@ -87,11 +89,11 @@
     font-family: var(--font-display);
   }
   .text-glow {
-    text-shadow: 0 0 40px oklch(0.86 0.18 96 / 0.35);
+    text-shadow: 0 0 40px rgb(218 160 23 / 0.35);
   }
   .glow-yellow {
-    box-shadow: 0 0 0 1px oklch(0.86 0.18 96 / 0.25),
-      0 10px 40px -10px oklch(0.86 0.18 96 / 0.45);
+    box-shadow: 0 0 0 1px rgb(218 160 23 / 0.25),
+      0 10px 40px -10px rgb(218 160 23 / 0.45);
   }
   .glass {
     background: linear-gradient(
@@ -130,13 +132,13 @@
 
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 oklch(0.86 0.18 96 / 0.5);
+    box-shadow: 0 0 0 0 rgb(218 160 23 / 0.5);
   }
   70% {
-    box-shadow: 0 0 0 16px oklch(0.86 0.18 96 / 0);
+    box-shadow: 0 0 0 16px rgb(218 160 23 / 0);
   }
   100% {
-    box-shadow: 0 0 0 0 oklch(0.86 0.18 96 / 0);
+    box-shadow: 0 0 0 0 rgb(218 160 23 / 0);
   }
 }
 .animate-pulse-ring {

@@ -10,7 +10,7 @@ const reviews = [
     quote:
       'The turf and floodlights are genuinely professional. We shifted our entire weekend league here and never looked back.',
     name: 'Hamza Tariq',
-    role: 'Captain, Enclave Strikers',
+    role: 'Captain, Champions XI',
   },
   {
     quote:
@@ -53,7 +53,7 @@ export function Testimonials() {
 
   return (
     <section className="relative py-24 sm:py-32">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_60%_at_50%_50%,oklch(0.86_0.18_96/0.08),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_60%_at_50%_50%,rgb(218_160_23/0.08),transparent_70%)]" />
       <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
         <Reveal>
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-primary">

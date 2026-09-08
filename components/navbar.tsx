@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from 'motion/react'
-import { Menu, X } from 'lucide-react'
+import { Menu, Star, X } from 'lucide-react'
 import { useState } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
@@ -11,6 +11,7 @@ const links = [
   { label: 'Facility', href: '#facility' },
   { label: 'Booking', href: '#booking' },
   { label: 'Packages', href: '#packages' },
+  { label: 'Merchandise', href: '#merchandise' },
   { label: 'Gallery', href: '#gallery' },
   { label: 'Events', href: '#events' },
   { label: 'Contact', href: '#contact' },
@@ -135,13 +136,13 @@ export function Navbar() {
         }`}
       >
         <a href="#home" className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary font-display text-lg font-bold text-primary-foreground">
-            360
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
+            <Star className="h-5 w-5 fill-current" />
           </span>
           <span className="hidden font-display text-lg font-semibold leading-none tracking-wide sm:block">
-            KOHISTAN ENCLAVE
+            CHAMPIONS
             <span className="block text-[11px] font-normal tracking-[0.3em] text-primary">
-              CRICKET ARENA
+              YARD
             </span>
           </span>
         </a>

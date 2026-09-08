@@ -6,7 +6,7 @@ import { Reveal, StaggerGroup, StaggerItem } from './motion-primitives'
 const events = [
   {
     date: 'SEP 06',
-    title: 'Enclave Night League — Week 1',
+    title: 'Champions Night League — Week 1',
     type: 'Tournament',
     time: '6:00 PM – 11:00 PM',
     slots: '4 team slots left',

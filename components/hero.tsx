@@ -33,7 +33,7 @@ export function Hero() {
       <motion.div style={{ y, scale }} className="absolute inset-0 -z-20">
         <img
           src="/images/hero-stadium.png"
-          alt="Kohistan Enclave 360 Cricket Arena floodlit at night"
+          alt="Champions Yard multi-sport arena floodlit at night"
           className="h-full w-full object-cover"
         />
       </motion.div>
@@ -43,7 +43,7 @@ export function Hero() {
         style={{ opacity: overlayOpacity }}
         className="absolute inset-0 -z-10 bg-gradient-to-b from-background/70 via-background/40 to-background"
       />
-      <div className="pointer-events-none absolute inset-0 -z-10 animate-flood bg-[radial-gradient(60%_50%_at_50%_-10%,oklch(0.86_0.18_96/0.28),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 animate-flood bg-[radial-gradient(60%_50%_at_50%_-10%,rgb(218_160_23/0.28),transparent_70%)]" />
       <div className="pointer-events-none absolute inset-0 -z-10 grid-lines opacity-40" />
 
       <motion.div
@@ -67,7 +67,7 @@ export function Hero() {
           className="mb-4 flex items-center justify-center gap-2 text-xs text-muted-foreground"
         >
           <MapPin className="h-3.5 w-3.5 text-primary" />
-          Kohistan Enclave, Wah Cantt
+          Champions Yard, Wah Cantt
         </motion.div>
 
         <motion.h1
@@ -81,14 +81,23 @@ export function Hero() {
         </motion.h1>
 
         <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.6 }}
+          className="mt-4 font-display text-sm font-semibold uppercase tracking-[0.35em] text-foreground/90"
+        >
+          Play. Compete. Become <span className="text-primary">Champions</span>.
+        </motion.p>
+
+        <motion.p
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.7 }}
+          transition={{ delay: 0.55, duration: 0.7 }}
           className="mx-auto mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg"
         >
-          A premium enclosed 360° cricket arena by Kohistan Enclave. Book the
-          ground, grab a membership, and host your next match on championship
-          turf — day or night.
+          Champions Yard is a premium multi-sport arena for padel, soccer,
+          and cricket. Book your court, grab a membership, and play your
+          next match on championship-grade surfaces — day or night.
         </motion.p>
 
         <motion.div

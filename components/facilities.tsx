@@ -15,8 +15,8 @@ import { Reveal, StaggerGroup, StaggerItem, TiltCard } from './motion-primitives
 const facilities = [
   {
     icon: CircleDot,
-    title: '360° Net-Roof Arena',
-    desc: 'Fully enclosed netting on all sides and overhead — play freely with zero lost balls.',
+    title: '360° Enclosed Courts',
+    desc: 'Fully enclosed netting and glass walls across every court — play freely with zero lost balls.',
   },
   {
     icon: Lightbulb,
@@ -25,8 +25,8 @@ const facilities = [
   },
   {
     icon: Sprout,
-    title: 'Championship Turf',
-    desc: 'Premium all-weather turf with true bounce, tested for professional play.',
+    title: 'Championship Surfaces',
+    desc: 'Premium all-weather turf and courts, tested and tuned for padel, soccer, and cricket alike.',
   },
   {
     icon: Armchair,

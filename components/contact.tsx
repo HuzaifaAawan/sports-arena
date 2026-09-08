@@ -5,9 +5,9 @@ import { useState } from 'react'
 import { Reveal } from './motion-primitives'
 
 const info = [
-  { icon: MapPin, label: 'Location', value: 'Kohistan Enclave, GT Road, Wah Cantt' },
+  { icon: MapPin, label: 'Location', value: 'Champions Yard, GT Road, Wah Cantt' },
   { icon: Phone, label: 'Phone', value: '+92 300 000 0360' },
-  { icon: Mail, label: 'Email', value: 'play@kohistan360.pk' },
+  { icon: Mail, label: 'Email', value: 'play@championsyard.com' },
   { icon: Clock, label: 'Hours', value: 'Open daily, 8:00 AM – 12:00 AM' },
 ]
 
@@ -38,7 +38,7 @@ export function Contact() {
             <Reveal delay={0.1}>
               <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
                 Drop by, call, or message us on WhatsApp to lock in your slot.
-                We are right inside Kohistan Enclave.
+                We're at Champions Yard, Wah Cantt.
               </p>
             </Reveal>
 
@@ -63,8 +63,8 @@ export function Contact() {
             <Reveal delay={0.3}>
               <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
                 <iframe
-                  title="Kohistan Enclave 360 Cricket Arena location"
-                  src="https://www.google.com/maps?q=Kohistan+Enclave+Wah+Cantt&output=embed"
+                  title="Champions Yard location"
+                  src="https://www.google.com/maps?q=Champions+Yard+Wah+Cantt&output=embed"
                   className="h-56 w-full grayscale-[0.3] contrast-110"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"

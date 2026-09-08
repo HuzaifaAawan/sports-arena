@@ -13,6 +13,9 @@ import {
   PartyPopper,
   LogIn,
   AlertCircle,
+  Target,
+  Goal,
+  Grid3x3,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useSession, signIn } from 'next-auth/react'
@@ -29,18 +32,67 @@ import { db } from '@/lib/firebase'
 import { Reveal } from './motion-primitives'
 
 type Slot = { time: string; label: string; price: number; night: boolean }
+type SportId = 'cricket' | 'soccer' | 'padel'
+
+type SportConfig = {
+  id: SportId
+  name: string
+  icon: typeof Target
+  slots: Slot[]
+}
 
 const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
-const SLOTS: Slot[] = [
-  { time: '08:00', label: '8:00 AM', price: 2500, night: false },
-  { time: '10:00', label: '10:00 AM', price: 2500, night: false },
-  { time: '12:00', label: '12:00 PM', price: 3000, night: false },
-  { time: '14:00', label: '2:00 PM', price: 3000, night: false },
-  { time: '16:00', label: '4:00 PM', price: 3500, night: false },
-  { time: '18:00', label: '6:00 PM', price: 4500, night: true },
-  { time: '20:00', label: '8:00 PM', price: 5000, night: true },
-  { time: '22:00', label: '10:00 PM', price: 4500, night: true },
+// Each sport books independently — its own slot grid, its own pricing, and
+// its own row in Firestore (bookingId is prefixed with the sport id), so a
+// Cricket Net booking at 6 PM never blocks the Soccer Pitch at 6 PM.
+// Prices below are placeholders — adjust per sport as needed.
+const SPORTS: SportConfig[] = [
+  {
+    id: 'cricket',
+    name: 'Cricket Net',
+    icon: Target,
+    slots: [
+      { time: '08:00', label: '8:00 AM', price: 2500, night: false },
+      { time: '10:00', label: '10:00 AM', price: 2500, night: false },
+      { time: '12:00', label: '12:00 PM', price: 3000, night: false },
+      { time: '14:00', label: '2:00 PM', price: 3000, night: false },
+      { time: '16:00', label: '4:00 PM', price: 3500, night: false },
+      { time: '18:00', label: '6:00 PM', price: 4500, night: true },
+      { time: '20:00', label: '8:00 PM', price: 5000, night: true },
+      { time: '22:00', label: '10:00 PM', price: 4500, night: true },
+    ],
+  },
+  {
+    id: 'soccer',
+    name: 'Soccer Pitch',
+    icon: Goal,
+    slots: [
+      { time: '08:00', label: '8:00 AM', price: 3500, night: false },
+      { time: '10:00', label: '10:00 AM', price: 3500, night: false },
+      { time: '12:00', label: '12:00 PM', price: 4000, night: false },
+      { time: '14:00', label: '2:00 PM', price: 4000, night: false },
+      { time: '16:00', label: '4:00 PM', price: 4500, night: false },
+      { time: '18:00', label: '6:00 PM', price: 5500, night: true },
+      { time: '20:00', label: '8:00 PM', price: 6000, night: true },
+      { time: '22:00', label: '10:00 PM', price: 5500, night: true },
+    ],
+  },
+  {
+    id: 'padel',
+    name: 'Padel Court',
+    icon: Grid3x3,
+    slots: [
+      { time: '08:00', label: '8:00 AM', price: 2000, night: false },
+      { time: '10:00', label: '10:00 AM', price: 2000, night: false },
+      { time: '12:00', label: '12:00 PM', price: 2500, night: false },
+      { time: '14:00', label: '2:00 PM', price: 2500, night: false },
+      { time: '16:00', label: '4:00 PM', price: 3000, night: false },
+      { time: '18:00', label: '6:00 PM', price: 3500, night: true },
+      { time: '20:00', label: '8:00 PM', price: 4000, night: true },
+      { time: '22:00', label: '10:00 PM', price: 3500, night: true },
+    ],
+  },
 ]
 
 function buildMonth(base: Date) {
@@ -58,6 +110,7 @@ function buildMonth(base: Date) {
 export function Booking() {
   const { data: session } = useSession()
   const today = useMemo(() => new Date(), [])
+  const [sportId, setSportId] = useState<SportId>('cricket')
   const [viewDate, setViewDate] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1),
   )
@@ -67,6 +120,8 @@ export function Booking() {
   const [status, setStatus] = useState<'idle' | 'confirming' | 'done'>('idle')
   const [bookedTimes, setBookedTimes] = useState<Set<string>>(new Set())
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const sport = SPORTS.find((s) => s.id === sportId)!
 
   const { cells, year, month } = useMemo(
     () => buildMonth(viewDate),
@@ -80,14 +135,27 @@ export function Booking() {
   const dateKey =
     selectedDay !== null ? `${year}-${month + 1}-${selectedDay}` : null
 
-  // Live-subscribe to bookings for the selected date, so availability
-  // updates instantly for everyone (no refresh needed).
+  function selectSport(id: SportId) {
+    setSportId(id)
+    setSelectedSlot(null)
+    setStatus('idle')
+    setErrorMsg(null)
+  }
+
+  // Live-subscribe to bookings for the selected sport + date, so
+  // availability updates instantly for everyone (no refresh needed).
+  // Filtering by both fields keeps each sport's slots independent — the
+  // same time slot can be open on one court and booked on another.
   useEffect(() => {
     if (!dateKey) {
       setBookedTimes(new Set())
       return
     }
-    const q = query(collection(db, 'bookings'), where('dateKey', '==', dateKey))
+    const q = query(
+      collection(db, 'bookings'),
+      where('dateKey', '==', dateKey),
+      where('sport', '==', sportId),
+    )
     const unsubscribe = onSnapshot(
       q,
       (snap) => {
@@ -102,7 +170,7 @@ export function Booking() {
       },
     )
     return () => unsubscribe()
-  }, [dateKey])
+  }, [dateKey, sportId])
 
   const canGoPrev =
     viewDate.getFullYear() > today.getFullYear() ||
@@ -135,7 +203,7 @@ export function Booking() {
     setStatus('confirming')
     setErrorMsg(null)
 
-    const bookingId = `${dateKey}_${selectedSlot.time}`
+    const bookingId = `${sportId}_${dateKey}_${selectedSlot.time}`
     const bookingRef = doc(db, 'bookings', bookingId)
 
     try {
@@ -145,6 +213,8 @@ export function Booking() {
           throw new Error('ALREADY_BOOKED')
         }
         transaction.set(bookingRef, {
+          sport: sportId,
+          sportName: sport.name,
           dateKey,
           slotTime: selectedSlot.time,
           slotLabel: selectedSlot.label,
@@ -182,12 +252,12 @@ export function Booking() {
 
   return (
     <section id="booking" className="relative py-24 sm:py-32">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_50%_at_80%_0%,oklch(0.86_0.18_96/0.1),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_50%_at_80%_0%,rgb(218_160_23/0.1),transparent_70%)]" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Reveal>
             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-primary">
-              Ground booking
+              Court &amp; pitch booking
             </p>
           </Reveal>
           <Reveal delay={0.05}>
@@ -197,13 +267,35 @@ export function Booking() {
           </Reveal>
           <Reveal delay={0.1}>
             <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
-              Pick a date, choose a time slot with live availability, set your
-              duration, and confirm instantly.
+              Choose your sport, pick a date, choose a time slot with live
+              availability, and confirm instantly.
             </p>
           </Reveal>
         </div>
 
-        <Reveal delay={0.1} className="mx-auto mt-14 max-w-5xl">
+        {/* Sport tabs — each sport has its own slots, pricing, and
+            availability, so switching tabs is switching the whole flow. */}
+        <Reveal delay={0.08} className="mx-auto mt-10 flex max-w-5xl flex-wrap justify-center gap-3">
+          {SPORTS.map((s) => {
+            const active = s.id === sportId
+            return (
+              <button
+                key={s.id}
+                onClick={() => selectSport(s.id)}
+                className={`flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition-all ${
+                  active
+                    ? 'border-primary bg-primary text-primary-foreground glow-yellow'
+                    : 'border-white/10 glass text-foreground hover:border-primary/40'
+                }`}
+              >
+                <s.icon className="h-4 w-4" />
+                {s.name}
+              </button>
+            )
+          })}
+        </Reveal>
+
+        <Reveal delay={0.1} className="mx-auto mt-6 max-w-5xl">
           <div className="grid gap-6 rounded-3xl glass p-4 sm:p-6 lg:grid-cols-2">
             {/* Calendar */}
             <div className="rounded-2xl bg-background/40 p-5">
@@ -278,7 +370,7 @@ export function Booking() {
               <div className="mb-4 flex items-center gap-2 font-display text-lg font-semibold">
                 <Clock className="h-5 w-5 text-primary" />
                 {selectedDay
-                  ? `Slots for ${new Date(year, month, selectedDay).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })}`
+                  ? `${sport.name} slots for ${new Date(year, month, selectedDay).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })}`
                   : 'Select a date'}
               </div>
 
@@ -289,7 +381,7 @@ export function Booking() {
               ) : (
                 <>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {SLOTS.map((slot) => {
+                    {sport.slots.map((slot) => {
                       const booked = bookedTimes.has(slot.time)
                       const active = selectedSlot?.time === slot.time
                       return (
@@ -420,6 +512,7 @@ export function Booking() {
               </div>
               <h3 className="font-display text-2xl font-bold">Booking confirmed!</h3>
               <p className="mt-2 text-sm text-muted-foreground">
+                {sport.name} —{' '}
                 {new Date(year, month, selectedDay).toLocaleDateString('en-US', {
                   weekday: 'long',
                   day: 'numeric',
