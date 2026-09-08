@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from 'motion/react'
-import { Menu, Star, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
@@ -135,16 +135,12 @@ export function Navbar() {
             : 'py-5'
         }`}
       >
-        <a href="#home" className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Star className="h-5 w-5 fill-current" />
-          </span>
-          <span className="hidden rounded-lg bg-foreground/95 px-2.5 py-1 font-display text-lg font-semibold leading-none tracking-wide text-background sm:block">
-            CHAMPIONS
-            <span className="block text-[11px] font-normal tracking-[0.3em] text-primary">
-              YARD
-            </span>
-          </span>
+        <a href="#home" className="flex items-center">
+          <img
+            src="/images/champions-yard-logo.png"
+            alt="Champions Yard"
+            className="h-10 w-auto sm:h-12"
+          />
         </a>
 
         <nav className="hidden items-center gap-7 lg:flex">

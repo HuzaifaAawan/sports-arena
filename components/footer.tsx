@@ -1,6 +1,6 @@
 'use client'
 
-import { Share2, Globe, Send, ArrowUpRight, Star } from 'lucide-react'
+import { Share2, Globe, Send, ArrowUpRight } from 'lucide-react'
 
 const nav = [
   { label: 'About', href: '#about' },
@@ -26,16 +26,12 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid gap-10 pb-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-2.5">
-              <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
-                <Star className="h-5 w-5 fill-current" />
-              </span>
-              <span className="rounded-lg bg-foreground/95 px-2.5 py-1 font-display text-lg font-semibold leading-none tracking-wide text-background">
-                CHAMPIONS
-                <span className="block text-[11px] font-normal tracking-[0.3em] text-primary">
-                  YARD
-                </span>
-              </span>
+            <div className="flex items-center">
+              <img
+                src="/images/champions-yard-logo.png"
+                alt="Champions Yard"
+                className="h-10 w-auto"
+              />
             </div>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
               Premium padel, soccer, and cricket courts under one roof. Play,
