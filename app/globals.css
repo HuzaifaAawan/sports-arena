@@ -98,8 +98,8 @@
   .glass {
     background: linear-gradient(
       145deg,
-      oklch(1 0 0 / 0.06),
-      oklch(1 0 0 / 0.02)
+      oklch(1 0 0 / 0.12),
+      oklch(1 0 0 / 0.12)
     );
     backdrop-filter: blur(14px);
     border: 1px solid oklch(1 0 0 / 0.1);

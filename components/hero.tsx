@@ -90,10 +90,10 @@ export function Hero() {
         </motion.p>
 
         <motion.p
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 42 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55, duration: 0.7 }}
-          className="mx-auto mt-4 max-w-xl rounded-2xl glass px-4 py-3 text-pretty text-sm leading-relaxed text-muted-foreground sm:px-5 sm:py-3.5 sm:text-base"
+          className="mx-auto mt-4 max-w-xl rounded-2xl glass px-4 py-3 text-pretty text-sm font-medium leading-relaxed bg-gradient-to-r from-[#9ec1e8] via-[#e9d8b8] to-[#daa017] bg-clip-text text-transparent sm:px-5 sm:py-3.5 sm:text-base"
         >
           Champions Yard is a premium multi-sport arena for padel, soccer,
           and cricket. Book your court, grab a membership, and play your
