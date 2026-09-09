@@ -10,6 +10,7 @@ const nav = [
   { label: 'Merchandise', href: '#merchandise' },
   { label: 'Gallery', href: '#gallery' },
   { label: 'Events', href: '#events' },
+  { label: 'FAQ', href: '#faq' },
 ]
 
 const policies = ['Booking Policy', 'Cancellation & Refunds', 'Code of Conduct', 'Privacy Policy']
