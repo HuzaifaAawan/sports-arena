@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useScroll, useTransform } from 'motion/react'
-import { ArrowRight, PlayCircle, MapPin, Target, Goal, Grid3x3 } from 'lucide-react'
+import { ArrowRight, PlayCircle, MapPin } from 'lucide-react'
 import { useRef } from 'react'
 import { Counter } from './motion-primitives'
 
@@ -9,12 +9,6 @@ const stats = [
   { to: 50000, suffix: ' sq ft', label: 'Enclosed arena' },
   { to: 12, suffix: ' hr', label: 'Daily operations' },
   { to: 500, suffix: '+', label: 'Matches hosted' },
-]
-
-const sports = [
-  { label: 'Cricket', icon: Target },
-  { label: 'Soccer', icon: Goal },
-  { label: 'Padel', icon: Grid3x3 },
 ]
 
 export function Hero() {
@@ -99,19 +93,15 @@ export function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55, duration: 0.7 }}
-          className="mx-auto mt-5 flex max-w-md items-center justify-center gap-3 sm:gap-4"
+          className="mx-auto mt-5 flex justify-center"
         >
-          {sports.map((s) => (
-            <div
-              key={s.label}
-              className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl glass px-3 py-3 sm:px-4 sm:py-3.5"
-            >
-              <s.icon className="h-6 w-6 text-primary sm:h-7 sm:w-7" />
-              <span className="text-xs font-medium tracking-wide text-foreground/90 sm:text-sm">
-                {s.label}
-              </span>
-            </div>
-          ))}
+          <motion.img
+            src="/images/sports-icon.png"
+            alt="Cricket, soccer, and padel at Champions Yard"
+            whileHover={{ scale: 1.12, rotate: -4 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 14 }}
+            className="h-20 w-auto drop-shadow-[0_0_20px_rgba(218,160,23,0.35)] sm:h-24"
+          />
         </motion.div>
 
         <motion.div
