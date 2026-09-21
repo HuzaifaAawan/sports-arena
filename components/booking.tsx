@@ -44,6 +44,22 @@ type SportConfig = {
 
 const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
+// localStorage key for the booking a Safepay checkout was just started
+// for. Needed because window.location.href = <safepay url> is a full
+// page navigation — any in-memory state is gone by the time (if ever)
+// the browser comes back, and some payment methods never redirect the
+// browser back at all. See the useEffect below that reads this.
+const PENDING_BOOKING_KEY = 'safepay_pending_booking'
+
+type PendingBooking = {
+  bookingId: string
+  sportName: string
+  dateKey: string
+  slotLabel: string
+  duration: number
+  total: number
+}
+
 // Each sport books independently — its own slot grid, its own pricing, and
 // its own row in Firestore (bookingId is prefixed with the sport id), so a
 // Cricket Net booking at 6 PM never blocks the Soccer Pitch at 6 PM.
@@ -141,6 +157,7 @@ export function Booking() {
     if (!payment) return
 
     if (payment === 'success' && bookingId) {
+      window.localStorage.removeItem(PENDING_BOOKING_KEY)
       getDoc(doc(db, 'bookings', bookingId))
         .then((snap) => {
           const data = snap.data()
@@ -156,11 +173,13 @@ export function Booking() {
         })
         .finally(() => setStatus('idle'))
     } else if (payment === 'failed') {
+      window.localStorage.removeItem(PENDING_BOOKING_KEY)
       setErrorMsg(
         'Payment could not be completed, so the slot was released. Please try again.',
       )
       setStatus('idle')
     } else if (payment === 'cancelled') {
+      window.localStorage.removeItem(PENDING_BOOKING_KEY)
       setErrorMsg('Payment was cancelled — the slot is open again.')
       setStatus('idle')
     }
@@ -169,6 +188,64 @@ export function Booking() {
     // doesn't re-trigger this.
     window.history.replaceState(null, '', window.location.pathname + '#booking')
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Fallback for when Safepay never redirects the browser back at all
+  // (observed with some card payments) — if a checkout was started and
+  // the browser later returns to this tab, or this tab simply regains
+  // focus, without the ?payment=... redirect ever firing, ask our own
+  // server directly whether that booking actually got paid instead of
+  // leaving it stuck looking "reserved but unpaid" forever.
+  useEffect(() => {
+    let cancelled = false
+
+    async function checkPendingBooking() {
+      const raw = window.localStorage.getItem(PENDING_BOOKING_KEY)
+      if (!raw) return
+
+      let pending: PendingBooking
+      try {
+        pending = JSON.parse(raw)
+      } catch {
+        window.localStorage.removeItem(PENDING_BOOKING_KEY)
+        return
+      }
+
+      try {
+        const res = await fetch(
+          `/api/payments/safepay/status?bookingId=${encodeURIComponent(pending.bookingId)}`,
+        )
+        if (cancelled) return
+        if (res.status === 404) {
+          // Booking no longer exists (released/cancelled) — nothing to keep checking.
+          window.localStorage.removeItem(PENDING_BOOKING_KEY)
+          return
+        }
+        const data = await res.json()
+        if (cancelled) return
+        if (data.paid) {
+          setPaidBooking({
+            sportName: pending.sportName,
+            dateKey: pending.dateKey,
+            slotLabel: pending.slotLabel,
+            duration: pending.duration,
+            total: pending.total,
+          })
+          window.localStorage.removeItem(PENDING_BOOKING_KEY)
+        }
+        // else: still pending — leave the flag in place and try again
+        // next time this tab gets focus.
+      } catch {
+        // Network hiccup — try again next time, don't clear the flag.
+      }
+    }
+
+    checkPendingBooking()
+    window.addEventListener('focus', checkPendingBooking)
+    return () => {
+      cancelled = true
+      window.removeEventListener('focus', checkPendingBooking)
+    }
   }, [])
 
   const { cells, year, month } = useMemo(
@@ -293,6 +370,17 @@ export function Booking() {
       if (!res.ok || !data.url) {
         throw new Error(data.error ?? 'PAYMENT_INIT_FAILED')
       }
+      window.localStorage.setItem(
+        PENDING_BOOKING_KEY,
+        JSON.stringify({
+          bookingId,
+          sportName: sport.name,
+          dateKey,
+          slotLabel: selectedSlot.label,
+          duration,
+          total,
+        } satisfies PendingBooking),
+      )
       window.location.href = data.url
     } catch (err) {
       if (err instanceof Error && err.message === 'ALREADY_BOOKED') {
@@ -315,6 +403,7 @@ export function Booking() {
         } catch {
           // best-effort cleanup only
         }
+        window.localStorage.removeItem(PENDING_BOOKING_KEY)
         setErrorMsg('Something went wrong starting payment. Please try again.')
       }
       setStatus('idle')

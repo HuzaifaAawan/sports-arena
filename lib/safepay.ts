@@ -144,3 +144,39 @@ export function verifySafepayWebhook(params: {
     .digest('hex')
   return expected === params.signature
 }
+
+/**
+ * Step 5 — ask Safepay directly whether a tracker's payment has actually
+ * completed. This is the belt-and-suspenders path: unlike the redirect
+ * callback and the webhook, it doesn't depend on Safepay successfully
+ * reaching *us* — we reach out to *them* instead. Useful when neither the
+ * browser redirect nor the webhook fires (seen in testing with some card
+ * payments). Matches the documented
+ * `GET /reporter/api/v1/payments/{tracker}` contract field-for-field
+ * against Safepay's own example response.
+ */
+export async function fetchSafepayTrackerStatus(
+  tracker: string,
+): Promise<{ paid: boolean; raw: unknown }> {
+  const res = await fetch(
+    `${apiBase()}/reporter/api/v1/payments/${encodeURIComponent(tracker)}`,
+    {
+      method: 'GET',
+      headers: { 'X-SFPY-MERCHANT-SECRET': v1Secret() },
+    },
+  )
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(
+      `Safepay reporter/api/v1/payments failed (${res.status}): ${text}`,
+    )
+  }
+
+  const json = await res.json()
+  const paid =
+    json?.status?.message === 'success' &&
+    json?.data?.tracker?.state === 'TRACKER_ENDED'
+
+  return { paid, raw: json }
+}
