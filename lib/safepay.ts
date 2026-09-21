@@ -36,6 +36,12 @@ function v1Secret(): string {
   return secret
 }
 
+function webhookSecret(): string {
+  const secret = process.env.SAFEPAY_WEBHOOK_SECRET
+  if (!secret) throw new Error('Missing SAFEPAY_WEBHOOK_SECRET in .env.local')
+  return secret
+}
+
 /**
  * Step 1 — open an order/payment session with Safepay for a given amount.
  * Returns a `token` (Safepay calls this the "tracker") used to build the
@@ -71,7 +77,11 @@ export async function createSafepayOrder(params: {
 /**
  * Step 2 — build the hosted checkout URL the customer's browser is sent to.
  * This is pure URL-building (no network call), matching @sfpy/node-sdk's
- * Checkout.create() exactly.
+ * Checkout.create() exactly. `webhooks: true` tells Safepay to also POST
+ * an async payment.succeeded / payment.failed event to our webhook route
+ * — this is the reliable confirmation path, since some payment methods
+ * (cards especially) complete without ever sending the browser back to
+ * `redirectUrl`.
  */
 export function buildSafepayCheckoutUrl(params: {
   token: string
@@ -109,4 +119,28 @@ export function verifySafepaySignature(params: {
     .update(params.tracker)
     .digest('hex')
   return expected === params.sig
+}
+
+/**
+ * Step 4 — verify an async webhook call actually came from Safepay.
+ * Mirrors @sfpy/node-sdk's Verify.webhook() exactly (read from its
+ * published source, not guessed): HMAC-SHA512 of
+ * `Buffer.from(JSON.stringify(data))` — where `data` is the webhook
+ * body's `data` field — using the webhook secret from Safepay's
+ * dashboard (Developer section), compared against the `x-sfpy-signature`
+ * header. This is a *different* secret and a *different* algorithm from
+ * `verifySafepaySignature` above — don't mix them up.
+ */
+export function verifySafepayWebhook(params: {
+  signature: string | null
+  data: unknown
+}): boolean {
+  if (!params.signature || params.data === undefined) return false
+  const crypto = require('crypto') as typeof import('crypto')
+  const payload = Buffer.from(JSON.stringify(params.data))
+  const expected = crypto
+    .createHmac('sha512', webhookSecret())
+    .update(payload)
+    .digest('hex')
+  return expected === params.signature
 }

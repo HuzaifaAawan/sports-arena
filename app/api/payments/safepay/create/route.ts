@@ -39,10 +39,15 @@ export async function POST(request: NextRequest) {
       orderId: bookingId,
       redirectUrl: `${origin}/api/payments/safepay/callback?bookingId=${encodeURIComponent(bookingId)}`,
       cancelUrl: `${origin}/api/payments/safepay/cancel?bookingId=${encodeURIComponent(bookingId)}`,
+      // Ask Safepay to also fire an async webhook to /api/payments/safepay/webhook.
+      // That's the reliable confirmation path — see lib/safepay.ts for why the
+      // browser redirect alone isn't enough for some payment methods (cards).
+      webhooks: true,
     })
 
     // Remember which Safepay token this booking's payment session used, so
-    // the callback route can double-check it's looking at the right order.
+    // the callback route (and the webhook route) can double-check they're
+    // looking at the right order.
     await bookingRef.update({ safepayToken: token })
 
     return NextResponse.json({ url })
