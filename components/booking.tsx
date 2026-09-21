@@ -22,6 +22,7 @@ import { useSession, signIn } from 'next-auth/react'
 import {
   collection,
   doc,
+  getDoc,
   onSnapshot,
   query,
   runTransaction,
@@ -117,11 +118,58 @@ export function Booking() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
   const [duration, setDuration] = useState(1)
-  const [status, setStatus] = useState<'idle' | 'confirming' | 'done'>('idle')
+  const [status, setStatus] = useState<'idle' | 'confirming' | 'redirecting'>('idle')
   const [bookedTimes, setBookedTimes] = useState<Set<string>>(new Set())
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [paidBooking, setPaidBooking] = useState<{
+    sportName: string
+    dateKey: string
+    slotLabel: string
+    duration: number
+    total: number
+  } | null>(null)
 
   const sport = SPORTS.find((s) => s.id === sportId)!
+
+  // Coming back from Safepay's hosted checkout — the whole page navigated
+  // away and back, so any in-memory selection (selectedSlot, etc.) is gone.
+  // Re-hydrate what we need from the URL + Firestore instead.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const payment = params.get('payment')
+    const bookingId = params.get('bookingId')
+    if (!payment) return
+
+    if (payment === 'success' && bookingId) {
+      getDoc(doc(db, 'bookings', bookingId))
+        .then((snap) => {
+          const data = snap.data()
+          if (data) {
+            setPaidBooking({
+              sportName: data.sportName,
+              dateKey: data.dateKey,
+              slotLabel: data.slotLabel,
+              duration: data.duration,
+              total: data.total,
+            })
+          }
+        })
+        .finally(() => setStatus('idle'))
+    } else if (payment === 'failed') {
+      setErrorMsg(
+        'Payment could not be completed, so the slot was released. Please try again.',
+      )
+      setStatus('idle')
+    } else if (payment === 'cancelled') {
+      setErrorMsg('Payment was cancelled — the slot is open again.')
+      setStatus('idle')
+    }
+
+    // Drop the ?payment=...&bookingId=... query params so a page refresh
+    // doesn't re-trigger this.
+    window.history.replaceState(null, '', window.location.pathname + '#booking')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const { cells, year, month } = useMemo(
     () => buildMonth(viewDate),
@@ -212,6 +260,12 @@ export function Booking() {
         if (existing.exists()) {
           throw new Error('ALREADY_BOOKED')
         }
+        // Reserve the slot as unpaid first — it only becomes a real,
+        // confirmed booking once Safepay's callback verifies payment.
+        // This is what actually blocks the slot for other visitors (the
+        // live listener above matches on dateKey+sport regardless of
+        // paid status), and /api/payments/safepay/cancel or /callback
+        // will delete it again if the payment doesn't go through.
         transaction.set(bookingRef, {
           sport: sportId,
           sportName: sport.name,
@@ -224,9 +278,22 @@ export function Booking() {
           userName: session.user?.name ?? null,
           userEmail: session.user?.email ?? null,
           createdAt: serverTimestamp(),
+          paid: false,
+          status: 'pending_payment',
         })
       })
-      setStatus('done')
+
+      setStatus('redirecting')
+      const res = await fetch('/api/payments/safepay/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? 'PAYMENT_INIT_FAILED')
+      }
+      window.location.href = data.url
     } catch (err) {
       if (err instanceof Error && err.message === 'ALREADY_BOOKED') {
         // Someone else grabbed this exact slot a moment before us. Block it
@@ -236,7 +303,19 @@ export function Booking() {
         setSelectedSlot(null)
         setErrorMsg('This slot was just booked by someone else. Please choose another slot.')
       } else {
-        setErrorMsg('Something went wrong with your booking. Please try again.')
+        // Reservation likely went through but payment couldn't be started —
+        // release the slot again rather than leaving it stuck.
+        try {
+          await runTransaction(db, async (transaction) => {
+            const existing = await transaction.get(bookingRef)
+            if (existing.exists() && existing.data()?.paid !== true) {
+              transaction.delete(bookingRef)
+            }
+          })
+        } catch {
+          // best-effort cleanup only
+        }
+        setErrorMsg('Something went wrong starting payment. Please try again.')
       }
       setStatus('idle')
     }
@@ -248,6 +327,7 @@ export function Booking() {
     setDuration(1)
     setStatus('idle')
     setErrorMsg(null)
+    setPaidBooking(null)
   }
 
   return (
@@ -470,6 +550,11 @@ export function Booking() {
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Confirming...
                         </>
+                      ) : status === 'redirecting' ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Redirecting to payment...
+                        </>
                       ) : !session?.user ? (
                         <>
                           <LogIn className="h-4 w-4" />
@@ -490,9 +575,12 @@ export function Booking() {
         </Reveal>
       </div>
 
-      {/* Confirmation modal */}
+      {/* Confirmation modal — shown after returning from a successful
+          Safepay payment, using the booking fetched from Firestore (the
+          in-memory slot/date selection is gone after the redirect round
+          trip). */}
       <AnimatePresence>
-        {status === 'done' && selectedSlot && selectedDay && (
+        {paidBooking && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -512,18 +600,21 @@ export function Booking() {
               </div>
               <h3 className="font-display text-2xl font-bold">Booking confirmed!</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                {sport.name} —{' '}
-                {new Date(year, month, selectedDay).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                })}{' '}
-                at {selectedSlot.label} for {duration}h.
+                {paidBooking.sportName} —{' '}
+                {(() => {
+                  const [y, m, d] = paidBooking.dateKey.split('-').map(Number)
+                  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                  })
+                })()}{' '}
+                at {paidBooking.slotLabel} for {paidBooking.duration}h.
               </p>
               <div className="my-5 rounded-xl bg-background/50 p-4">
                 <div className="text-xs text-muted-foreground">Amount paid</div>
                 <div className="font-display text-3xl font-bold text-primary">
-                  Rs {total.toLocaleString()}
+                  Rs {paidBooking.total.toLocaleString()}
                 </div>
               </div>
               <button
